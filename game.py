@@ -1,4 +1,4 @@
-class Board:
+class Kalah:
     def __init__(self, pitsPerPlayer: int):
         """
         Initialize the board with the given number of pits per player.
@@ -24,12 +24,8 @@ class Board:
             raise ValueError('Game is over.')
 
         # Check if pit is valid
-        if 0 > pit or pit >= self.pitsPerPlayer:
+        if 0 > pit or pit >= len(self.pits) or pit == self.pitsPerPlayer or pit == 2 * self.pitsPerPlayer + 1:
             raise ValueError('Invalid pit index.')
-
-        # Offset index to skip store and offset if lower player
-        if isUpperPlayer:
-            pit += self.pitsPerPlayer + 1
 
         if self.pits[pit] == 0:
             raise ValueError('Pit is empty.')
@@ -46,11 +42,13 @@ class Board:
             # If the last seed falls into a empty pit on the player's side, 
             # the player captures this seed and all seeds in the opposite pit (the other player’s pit) and puts them in his store.
             if seeds == 1 and self.pits[pit] == 0 and pit != lowerStoreIdx and pit != upperStoreIdx:
-                if isUpperPlayer:
-                    self.pits[upperStoreIdx] += 1 + self.pits[2 * self.pitsPerPlayer - pit + 1]
-                else:
-                    self.pits[lowerStoreIdx] += 1 + self.pits[2 * self.pitsPerPlayer - pit + 1]
-                self.pits[2 * self.pitsPerPlayer - pit + 1] = 0
+                distanceToRightStore = abs(self.pitsPerPlayer - pit)
+                if isUpperPlayer and self.pits[pit - 2 * distanceToRightStore] > 0:
+                    self.pits[upperStoreIdx] += 1 + self.pits[pit - 2 * distanceToRightStore]
+                    self.pits[pit - 2 * distanceToRightStore] = 0
+                if not isUpperPlayer and self.pits[pit + 2 * distanceToRightStore] > 0:
+                    self.pits[lowerStoreIdx] += 1 + self.pits[pit + 2 * distanceToRightStore]
+                    self.pits[pit + 2 * distanceToRightStore] = 0
             else:
                 self.pits[pit] += 1
             seeds -= 1
@@ -74,18 +72,3 @@ class Board:
 
     def getScore(self):
         return self.pits[self.pitsPerPlayer], self.pits[2 * self.pitsPerPlayer + 1]
-
-
-board = Board(6)
-i = 0
-while not board.gameOver:
-    board.print()
-    player = 'Upper' if i % 2 == 0 else 'Lower'
-    pit = int(input(f'{player} player pick a pit: '))
-    repeat = board.pick(pit, i % 2 == 0)
-    if not repeat:
-        i += 1
-board.print()
-score = board.getScore()
-print(f'Upper player {score[1]}')
-print(f'Lower player {score[0]}')
