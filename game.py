@@ -43,12 +43,14 @@ class Kalah:
             # the player captures this seed and all seeds in the opposite pit (the other player’s pit) and puts them in his store.
             if seeds == 1 and self.pits[pit] == 0 and pit != lowerStoreIdx and pit != upperStoreIdx:
                 distanceToRightStore = abs(self.pitsPerPlayer - pit)
-                if isUpperPlayer and self.pits[pit - 2 * distanceToRightStore] > 0:
+                if pit > self.pitsPerPlayer and self.pits[pit - 2 * distanceToRightStore] > 0:
                     self.pits[upperStoreIdx] += 1 + self.pits[pit - 2 * distanceToRightStore]
                     self.pits[pit - 2 * distanceToRightStore] = 0
-                if not isUpperPlayer and self.pits[pit + 2 * distanceToRightStore] > 0:
+                elif pit < self.pitsPerPlayer and self.pits[pit + 2 * distanceToRightStore] > 0:
                     self.pits[lowerStoreIdx] += 1 + self.pits[pit + 2 * distanceToRightStore]
                     self.pits[pit + 2 * distanceToRightStore] = 0
+                else:
+                    self.pits[pit] += 1
             else:
                 self.pits[pit] += 1
             seeds -= 1

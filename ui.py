@@ -125,6 +125,6 @@ class Board:
         pygame.quit()
     
 
-kalah = Kalah(2)
+kalah = Kalah(6)
 board = Board(kalah)  
 board.run()
