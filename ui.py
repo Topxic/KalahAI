@@ -1,4 +1,5 @@
 import pygame
+from ai import KalahAI
 
 from game import Kalah
 
@@ -20,8 +21,9 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Board:
-    def __init__(self, game: Kalah):
+    def __init__(self, game: Kalah, ai: KalahAI=None):
         self.game = game
+        self.ai = ai
         tileWidth = PIT_IMAGE.get_rect().width
         tileHeight = PIT_IMAGE.get_rect().height
         self.width = GAP_SIZE + (tileWidth + GAP_SIZE) * (game.pitsPerPlayer + 1) + tileWidth + GAP_SIZE
@@ -97,24 +99,28 @@ class Board:
                 if event.type == pygame.QUIT:
                     running = False
 
-            # Check if user clicked on a pit
             clickedIdx = -1
-            for event in events:
-                if event.type == pygame.MOUSEBUTTONUP:
-                    for i in range(len(self.pitSprites)):
-                        pit = self.pitSprites[i]
-                        if not pit.isStore and pit.rect.collidepoint(event.pos):
-                            clickedIdx = i
-                            break
-
-            # Discard invalid moves
-            if self.uppersTurn and clickedIdx < self.game.pitsPerPlayer:
-                clickedIdx = -1
-            if not self.uppersTurn and clickedIdx >= self.game.pitsPerPlayer + 1:
-                clickedIdx = -1
+            if self.uppersTurn and self.ai is not None and not self.game.gameOver:
+                clickedIdx = ai.getMove(self.game)
+            else:            
+                # Check if user clicked on a pit
+                for event in events:
+                    if event.type == pygame.MOUSEBUTTONUP:
+                        for i in range(len(self.pitSprites)):
+                            pit = self.pitSprites[i]
+                            if not pit.isStore and pit.rect.collidepoint(event.pos):
+                                clickedIdx = i
+                                break
+                # Discard invalid moves
+                if self.uppersTurn and clickedIdx < self.game.pitsPerPlayer:
+                    clickedIdx = -1
+                if not self.uppersTurn and clickedIdx >= self.game.pitsPerPlayer + 1:
+                    clickedIdx = -1
 
             # Perfom move and evaluate turn
-            if clickedIdx != -1:
+            if clickedIdx != -1 and not self.game.gameOver:
+                playerName = 'Upper' if self.uppersTurn else 'Lower'
+                print(f'{playerName} player clicked pit {clickedIdx}')
                 newTurn = self.game.pick(clickedIdx, self.uppersTurn)
                 if not newTurn:
                     self.uppersTurn = not self.uppersTurn
@@ -131,5 +137,6 @@ class Board:
     
 
 kalah = Kalah(6)
-board = Board(kalah)  
+ai = KalahAI(8, True)
+board = Board(kalah, ai)  
 board.run(False)

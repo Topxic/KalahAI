@@ -75,5 +75,10 @@ class Kalah:
         print(f'Upper Player: {self.pits[self.pitsPerPlayer + 1:][::-1]}')
         print(f'Lower Player: {self.pits[:self.pitsPerPlayer + 1]}\n')
 
-    def getScore(self):
+    def getScore(self) -> (int, int):
+        """
+        Get the score of the lower and upper player.
+
+        :return: The score of the lower and upper player.
+        """
         return self.pits[self.pitsPerPlayer], self.pits[2 * self.pitsPerPlayer + 1]
