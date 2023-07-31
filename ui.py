@@ -4,8 +4,9 @@ from game import Kalah
 
 GAP_SIZE = 10
 TEXT_PADDING = 30
-PIT_IMAGE = pygame.image.load("pit-60x60.png")
-STORE_IMAGE = pygame.image.load("store-60x60.png")
+PIT_IMAGE = pygame.image.load("assets/pit-60x60.png")
+HIGHLIGHTED_PIT_IMAGE = pygame.image.load("assets/highlighted-pit-60x60.png")
+STORE_IMAGE = pygame.image.load("assets/store-60x60.png")
 
 
 class Tile(pygame.sprite.Sprite):
@@ -87,9 +88,10 @@ class Board:
             textRect.center = (x, y)
             self.screen.blit(text, textRect)
 
-    def run(self):
-        self.uppersTurn = True
+    def run(self, upperStarts):
+        self.uppersTurn = upperStarts
         running = True
+        lastClickedIdx = -1
         while running:
             events = pygame.event.get()
             for event in events:
@@ -117,6 +119,10 @@ class Board:
                 newTurn = self.game.pick(clickedIdx, self.uppersTurn)
                 if not newTurn:
                     self.uppersTurn = not self.uppersTurn
+                # Mark selected pit
+                self.pitSprites[lastClickedIdx].image = PIT_IMAGE
+                self.pitSprites[clickedIdx].image = HIGHLIGHTED_PIT_IMAGE
+                lastClickedIdx = clickedIdx
                                      
             self.draw()
 
@@ -127,4 +133,4 @@ class Board:
 
 kalah = Kalah(6)
 board = Board(kalah)  
-board.run()
+board.run(False)
