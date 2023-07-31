@@ -21,7 +21,6 @@ class Tile(pygame.sprite.Sprite):
 
 class Board:
     def __init__(self, game: Kalah):
-        self.uppersTurn = True
         self.game = game
         tileWidth = PIT_IMAGE.get_rect().width
         tileHeight = PIT_IMAGE.get_rect().height

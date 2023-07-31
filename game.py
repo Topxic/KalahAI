@@ -41,7 +41,10 @@ class Kalah:
 
             # If the last seed falls into a empty pit on the player's side, 
             # the player captures this seed and all seeds in the opposite pit (the other player’s pit) and puts them in his store.
-            if seeds == 1 and self.pits[pit] == 0 and pit != lowerStoreIdx and pit != upperStoreIdx:
+            lastSeed = seeds == 1 and self.pits[pit] == 0
+            isStore = pit == lowerStoreIdx or pit == upperStoreIdx
+            pitIsOnPlayerSide = (isUpperPlayer and pit > self.pitsPerPlayer) or (not isUpperPlayer and pit < self.pitsPerPlayer)
+            if lastSeed and not isStore and pitIsOnPlayerSide:
                 distanceToRightStore = abs(self.pitsPerPlayer - pit)
                 if pit > self.pitsPerPlayer and self.pits[pit - 2 * distanceToRightStore] > 0:
                     self.pits[upperStoreIdx] += 1 + self.pits[pit - 2 * distanceToRightStore]
