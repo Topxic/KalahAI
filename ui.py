@@ -1,7 +1,6 @@
 import pygame
-from ai import KalahAI
 
-from game import Kalah
+from game import Kalah, Player
 
 GAP_SIZE = 10
 TEXT_PADDING = 30
@@ -21,9 +20,8 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Board:
-    def __init__(self, game: Kalah, ai: KalahAI=None):
+    def __init__(self, game: Kalah):
         self.game = game
-        self.ai = ai
         tileWidth = PIT_IMAGE.get_rect().width
         tileHeight = PIT_IMAGE.get_rect().height
         self.width = GAP_SIZE + (tileWidth + GAP_SIZE) * (game.pitsPerPlayer + 1) + tileWidth + GAP_SIZE
@@ -33,7 +31,6 @@ class Board:
         self.screen = pygame.display.set_mode((self.width, self.height))
         pygame.display.set_caption('Kalah')
         self.font = pygame.font.SysFont('Arial', 20)
-
 
         # Create sprites in order of the game layout
         self.pitSprites = []
@@ -62,16 +59,17 @@ class Board:
         self.pitSpritesGroupe.draw(self.screen)
 
         # Draw active turn info
-        if self.game.gameOver:
-            score = self.game.getScore()
-            if score[1] > score[0]:
+        if self.game.isOver:
+            upper = self.game.getScore(Player.UPPER)
+            lower = self.game.getScore(Player.LOWER)
+            if lower < upper:
                 info = 'Upper wins'
-            elif score[1] < score[0]:
+            elif lower > upper:
                 info = 'Lower wins'
             else:
                 info = 'Draw'
         else:
-            info = 'Upper turn' if self.uppersTurn else 'Lower turn'
+            info = 'Upper turn' if self.game.currentPlayer == Player.UPPER else 'Lower turn'
 
         text = self.font.render(info, True, (0, 0, 0))
         textRect = text.get_rect()
@@ -89,54 +87,44 @@ class Board:
             textRect.center = (x, y)
             self.screen.blit(text, textRect)
 
-    def run(self, upperStarts):
-        self.uppersTurn = upperStarts
+    def run(self):
         running = True
         lastClickedIdx = -1
+
         while running:
             events = pygame.event.get()
             for event in events:
                 if event.type == pygame.QUIT:
                     running = False
 
+            # Check if user clicked on a pit
             clickedIdx = -1
-            if self.uppersTurn == self.ai.isUpperPlayer and self.ai is not None and not self.game.gameOver:
-                clickedIdx = ai.getMove(self.game)
-            else:            
-                # Check if user clicked on a pit
-                for event in events:
-                    if event.type == pygame.MOUSEBUTTONUP:
-                        for i in range(len(self.pitSprites)):
-                            pit = self.pitSprites[i]
-                            if not pit.isStore and pit.rect.collidepoint(event.pos):
-                                clickedIdx = i
-                                break
-            # Discard invalid moves
-            if self.uppersTurn and clickedIdx < self.game.pitsPerPlayer:
-                clickedIdx = -1
-            if not self.uppersTurn and clickedIdx >= self.game.pitsPerPlayer + 1:
-                clickedIdx = -1
+            for event in events:
+                if event.type == pygame.MOUSEBUTTONUP:
+                    for i in range(len(self.pitSprites)):
+                        pit = self.pitSprites[i]
+                        if not pit.isStore and pit.rect.collidepoint(event.pos):
+                            clickedIdx = i
+                            break
 
-            # Perfom move and evaluate turn
-            if clickedIdx != -1 and not self.game.gameOver:
-                playerName = 'Upper' if self.uppersTurn else 'Lower'
-                print(f'{playerName} player clicked pit {clickedIdx}')
-                newTurn = self.game.pick(clickedIdx, self.uppersTurn)
-                if not newTurn:
-                    self.uppersTurn = not self.uppersTurn
-                # Mark selected pit
-                self.pitSprites[lastClickedIdx].image = PIT_IMAGE
-                self.pitSprites[clickedIdx].image = HIGHLIGHTED_PIT_IMAGE
-                lastClickedIdx = clickedIdx
-                                     
+            # Play and mark selected pit
+            if clickedIdx != -1 and not self.game.isOver:
+                try:
+                    self.game.playPit(clickedIdx)
+                    self.pitSprites[lastClickedIdx].image = PIT_IMAGE
+                    self.pitSprites[clickedIdx].image = HIGHLIGHTED_PIT_IMAGE
+                    lastClickedIdx = clickedIdx
+                except Exception as e:
+                    print(e)
+                                          
             self.draw()
-
             pygame.display.update()
 
         pygame.quit()
     
+SEEDS_PER_PIT = 4
+PITS_PER_PLAYER = 6
 
-kalah = Kalah(6)
-ai = KalahAI(2, False)
-board = Board(kalah, ai)  
-board.run(False)
+kalah = Kalah(SEEDS_PER_PIT, PITS_PER_PLAYER, Player.UPPER)
+board = Board(kalah)  
+board.run()
