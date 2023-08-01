@@ -100,7 +100,7 @@ class Board:
                     running = False
 
             clickedIdx = -1
-            if self.uppersTurn and self.ai is not None and not self.game.gameOver:
+            if self.uppersTurn == self.ai.isUpperPlayer and self.ai is not None and not self.game.gameOver:
                 clickedIdx = ai.getMove(self.game)
             else:            
                 # Check if user clicked on a pit
@@ -111,11 +111,11 @@ class Board:
                             if not pit.isStore and pit.rect.collidepoint(event.pos):
                                 clickedIdx = i
                                 break
-                # Discard invalid moves
-                if self.uppersTurn and clickedIdx < self.game.pitsPerPlayer:
-                    clickedIdx = -1
-                if not self.uppersTurn and clickedIdx >= self.game.pitsPerPlayer + 1:
-                    clickedIdx = -1
+            # Discard invalid moves
+            if self.uppersTurn and clickedIdx < self.game.pitsPerPlayer:
+                clickedIdx = -1
+            if not self.uppersTurn and clickedIdx >= self.game.pitsPerPlayer + 1:
+                clickedIdx = -1
 
             # Perfom move and evaluate turn
             if clickedIdx != -1 and not self.game.gameOver:
@@ -137,6 +137,6 @@ class Board:
     
 
 kalah = Kalah(6)
-ai = KalahAI(8, True)
+ai = KalahAI(2, False)
 board = Board(kalah, ai)  
 board.run(False)
