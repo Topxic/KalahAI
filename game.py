@@ -1,5 +1,5 @@
 class Kalah:
-    def __init__(self, pitsPerPlayer: int):
+    def __init__(self, seedsPerPit: int, pitsPerPlayer: int):
         """
         Initialize the board with the given number of pits per player.
         The index of the board begins in the bottom left corner and increments counter-clockwise.
@@ -8,7 +8,8 @@ class Kalah:
         """
 
         self.pitsPerPlayer = pitsPerPlayer
-        self.pits = ([4] * pitsPerPlayer + [0]) * 2
+        self.seedsPerPit = seedsPerPit
+        self.pits = ([seedsPerPit] * pitsPerPlayer + [0]) * 2
         self.gameOver = False;
 
     def pick(self, pit: int, isUpperPlayer: bool) -> bool:
