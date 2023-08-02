@@ -135,8 +135,7 @@ class Kalah:
             return [i for i in range(0, self.pitsPerPlayer) if self.pits[i] > 0]
 
     def copy(self):
-        obj = Kalah(self.seedsPerPit, self.pitsPerPlayer)
+        obj = Kalah(self.seedsPerPit, self.pitsPerPlayer, self.currentPlayer)
         obj.isOver = self.isOver
         obj.pits = self.pits.copy()
-        obj.currentPlayer = self.currentPlayer
         return obj
