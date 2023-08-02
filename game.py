@@ -99,8 +99,8 @@ class Kalah:
 
         # Opposite player collects all remaining seeds on his side
         if self.isOver:
-            self.pits[self.lowerStoreIdx] += upperSeeds
-            self.pits[self.upperStoreIdx] += lowerSeeds
+            self.pits[self.lowerStoreIdx] += lowerSeeds
+            self.pits[self.upperStoreIdx] += upperSeeds
             self.pits[:self.pitsPerPlayer] = [0] * self.pitsPerPlayer
             self.pits[self.pitsPerPlayer + 1:2 * self.pitsPerPlayer + 1] = [0] * self.pitsPerPlayer
 
