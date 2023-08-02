@@ -1,0 +1,2 @@
+pygame==2.1.2
+pygame_button==0.0.3
