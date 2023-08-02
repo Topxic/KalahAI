@@ -1,6 +1,5 @@
 from game import Kalah, Player
-
-DEBUG_SEARCH_TREE = False
+from config import *
 
 
 class KalahAI:
@@ -81,36 +80,36 @@ class KalahAI:
         # Make move
         gameCopy = game.copy()
         prevPlayer = gameCopy.currentPlayer
-        gameCopy.playPit(move)
-        playerStays = gameCopy.currentPlayer == prevPlayer
+        nextPlayer = gameCopy.playPit(move)
+        minOrMax = maximizingPlayer if prevPlayer == nextPlayer else not maximizingPlayer
         moveHistory += [move]
 
         if gameCopy.isOver or depth == 0:
             value = self.evaluate(gameCopy)
-            if DEBUG_SEARCH_TREE:
-                    print(f'Leave node: {value:4} | {moveHistory}')
+            if DEBUG_SEARCH_TREE and self.maxSearchDepth - depth <= DEBUG_DEPTH:
+                print(f'Leave node | {"MAX" if not maximizingPlayer else "MIN"} | {value:4} | {moveHistory}')
             return value
 
         # Perform minimax
         if maximizingPlayer:
             value = float('-inf')
             for move in gameCopy.getValidMoves():
-                value = max(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, playerStays, moveHistory.copy()))
+                value = max(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, minOrMax, moveHistory.copy()))
                 alpha = max(alpha, value)
                 if beta <= alpha:
                     break
-                if DEBUG_SEARCH_TREE:
-                    print(f'Inner node: {value:4} | {moveHistory}')
+            if DEBUG_SEARCH_TREE and self.maxSearchDepth - depth <= DEBUG_DEPTH:
+                print(f'Inner node | {"MAX" if not maximizingPlayer else "MIN"} | {value:4} | {moveHistory}')
             return value
         
         else:
             value = float('inf')
             for move in gameCopy.getValidMoves():
-                value = min(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, not playerStays, moveHistory.copy()))
+                value = min(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, minOrMax, moveHistory.copy()))
                 beta = min(beta, value)
                 if beta <= alpha:
                     break
-            if DEBUG_SEARCH_TREE:
-                print(f'Inner node: {value:4} | {moveHistory}')
+            if DEBUG_SEARCH_TREE and self.maxSearchDepth - depth <= DEBUG_DEPTH:
+                print(f'Inner node | {"MAX" if not maximizingPlayer else "MIN"} | {value:4} | {moveHistory}')
             return value
     
