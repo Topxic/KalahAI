@@ -1,6 +1,6 @@
 import pygame
 from ai import KalahAI
-
+from config import *
 from game import Kalah, Player
 
 GAP_SIZE = 10
@@ -115,6 +115,7 @@ class Board:
                             pit = self.pitSprites[i]
                             if not pit.isStore and pit.rect.collidepoint(event.pos):
                                 clickedIdx = i
+                                print(f'Player for {self.game.currentPlayer} chose pit {i}')
                                 break
 
             # Play and mark selected pit
@@ -132,12 +133,10 @@ class Board:
 
         pygame.quit()
     
-SEEDS_PER_PIT = 4
-PITS_PER_PLAYER = 16
-AI_MAX_DEPTH = 4
 
-kalah = Kalah(SEEDS_PER_PIT, PITS_PER_PLAYER, Player.UPPER)
+kalah = Kalah(SEEDS_PER_PIT, PITS_PER_PLAYER, Player.LOWER)
 ai1 = KalahAI(AI_MAX_DEPTH, Player.UPPER)
 ai2 = KalahAI(AI_MAX_DEPTH, Player.LOWER)
-board = Board(kalah, ai1, ai2)  
+board = Board(kalah, ai1) # AI vs Human
+# board = Board(kalah, ai1, ai2)  # AI vs AI
 board.run()
