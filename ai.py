@@ -1,26 +1,42 @@
-from game import Kalah
+from game import Kalah, Player
+
+DEBUG_SEARCH_TREE = False
 
 
 class KalahAI:
-    def __init__(self, maxSearchDepth, isUpperPlayer):
+    def __init__(self, maxSearchDepth, player: Player):
+        if maxSearchDepth < 1:
+            raise ValueError('maxSearchDepth must be at least 1')
         self.maxSearchDepth = maxSearchDepth
-        self.isUpperPlayer = isUpperPlayer
-
-    def getValidMoves(self, game: Kalah) -> list[int]:
+        self.player = player
+    
+    def evaluate(self, game: Kalah) -> float:
         """
-        Returns a list of valid moves for the current player.
+        Evaluates the current game state for the current player.
 
         :param game: The current game state.
-        :return: A list of valid moves for the current player.
+        :return: The score of the current game state.
         """
 
-        validMoves = []
-        for i in range(game.pitsPerPlayer):
-            idx = i + game.pitsPerPlayer + 1 if self.isUpperPlayer else i
-            if game.pits[idx] > 0:
-                validMoves.append(idx)
+        upperScore = game.getScore(Player.UPPER)
+        lowerScore = game.getScore(Player.LOWER)
 
-        return validMoves
+        # Check if game is finished
+        if game.isOver:
+            if self.player == Player.UPPER and upperScore > lowerScore:
+                return float('inf')
+            elif self.player == Player.LOWER and lowerScore > upperScore:
+                return float('inf')
+            elif upperScore == lowerScore:
+                return 0
+            else:
+                return float('-inf')
+
+        # Calculate score
+        if self.player == Player.UPPER:
+            return upperScore - lowerScore
+        else:
+            return lowerScore - upperScore
 
     def getMove(self, game: Kalah) -> int:
         """
@@ -31,89 +47,70 @@ class KalahAI:
         :return: The best move for the current player.
         """
 
-        bestMove = None
+        # Check if game is finished
+        if game.isOver:
+            raise ValueError('Game is already over')
+
+        moves = game.getValidMoves()
         bestScore = float('-inf')
-        for move in self.getValidMoves(game):
-            score = self.minimax(game, move, self.maxSearchDepth, float('-inf'), float('inf'), True)
+        bestMove = moves[0]
+        for move in moves:
+            score = self.minimax(game, move, self.maxSearchDepth - 1, float('-inf'), float('inf'), False, [])
             if score > bestScore:
-                bestMove = move
                 bestScore = score
+                bestMove = move
 
-        # AI is losing in every searched move
-        if bestMove is None:
-            bestMove = self.getValidMoves(game)[0]
-
+        print(f'AI for {self.player} chose pit {bestMove} with score {bestScore}')
         return bestMove
     
-    def evaluate(self, game: Kalah) -> float:
+    def minimax(self, game: Kalah, move: int, depth: int, alpha: float, beta: float, maximizingPlayer: bool, moveHistory: list[int]) -> float:
         """
-        Evaluates the current game state for the current player.
-
-        :param game: The current game state.
-        :return: The score of the current game state.
-        """
-
-        # Check if game is finished
-        if game.gameOver:
-            score = game.getScore()
-            if self.isUpperPlayer and score[1] > score[0]:
-                return float('inf')
-            elif not self.isUpperPlayer and score[1] < score[0]:
-                return float('inf')
-            elif self.isUpperPlayer and score[1] < score[0]:
-                return float('-inf')
-            elif not self.isUpperPlayer and score[1] > score[0]:
-                return float('-inf')
-            else:
-                return 0
-
-        # Calculate score
-        lowerStoreIdx = game.pitsPerPlayer
-        upperStoreIdx = 2 * game.pitsPerPlayer + 1
-        if self.isUpperPlayer:
-            score = game.pits[upperStoreIdx] - game.pits[lowerStoreIdx]
-        else:
-            score = game.pits[lowerStoreIdx] - game.pits[upperStoreIdx]
-        return score
-    
-    def minimax(self, game: Kalah, move: int, depth: int, alpha: float, beta: float, maximizingPlayer: bool) -> float:
-        """
-        Searches for the best move for the current player
-        using the minimax algorithm with alpha-beta pruning.
+        Searches for the best move for the current player in the
+        game tree using the minimax algorithm with alpha-beta pruning.
 
         :param game: The current game state.
         :param move: The move to be evaluated.
-        :param depth: The current search depth.
-        :param alpha: The current alpha value.
-        :param beta: The current beta value.
-        :param maximizingPlayer: True if the current player is the AI, False otherwise.
-        :return: The score of the move.
+        :param depth: The current depth of the search tree.
+        :param alpha: The alpha value of the alpha-beta pruning.
+        :param beta: The beta value of the alpha-beta pruning.
+        :param maximizingPlayer: True if the current player is the maximizing player, False otherwise.
+        :param moveHistory: The history of moves made to reach the current game state.
+        :return: The score of the current game state.
         """
+        
+        # Make move
+        gameCopy = game.copy()
+        prevPlayer = gameCopy.currentPlayer
+        gameCopy.playPit(move)
+        playerStays = gameCopy.currentPlayer == prevPlayer
+        moveHistory += [move]
 
-        # Copy state and perform move
-        newGame = Kalah(game.pitsPerPlayer)
-        newGame.pits = game.pits.copy()
-        newGame.gameOver = game.gameOver
-        newGame.pick(move, self.isUpperPlayer)
+        if gameCopy.isOver or depth == 0:
+            value = self.evaluate(gameCopy)
+            if DEBUG_SEARCH_TREE:
+                    print(f'Leave node: {value:4} | {moveHistory}')
+            return value
 
-        # Evaluate game state
-        if depth == 0 or newGame.gameOver:
-            return self.evaluate(newGame)
-
-        # Search for best move
-        bestScore = float('-inf') if maximizingPlayer else float('inf')
-        for move in self.getValidMoves(newGame):
-            score = self.minimax(newGame, move, depth - 1, alpha, beta, not maximizingPlayer)
-            if maximizingPlayer:
-                bestScore = max(bestScore, score)
-                if bestScore > beta:
+        # Perform minimax
+        if maximizingPlayer:
+            value = float('-inf')
+            for move in gameCopy.getValidMoves():
+                value = max(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, playerStays, moveHistory.copy()))
+                alpha = max(alpha, value)
+                if beta <= alpha:
                     break
-                alpha = max(alpha, bestScore)
-            else:
-                bestScore = min(bestScore, score)
-                if bestScore < alpha:
+                if DEBUG_SEARCH_TREE:
+                    print(f'Inner node: {value:4} | {moveHistory}')
+            return value
+        
+        else:
+            value = float('inf')
+            for move in gameCopy.getValidMoves():
+                value = min(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, not playerStays, moveHistory.copy()))
+                beta = min(beta, value)
+                if beta <= alpha:
                     break
-                beta = min(beta, bestScore)
-
-        return bestScore
+            if DEBUG_SEARCH_TREE:
+                print(f'Inner node: {value:4} | {moveHistory}')
+            return value
     
