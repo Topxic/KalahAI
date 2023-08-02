@@ -14,7 +14,8 @@ class Kalah:
 
         :param pitsPerPlayer: The number of pits per player.
         """
-
+        
+        self.startingPlayer = startingPlayer
         self.pitsPerPlayer = pitsPerPlayer
         self.seedsPerPit = seedsPerPit
         self.currentPlayer = startingPlayer
@@ -22,6 +23,15 @@ class Kalah:
         self.isOver = False
         self.lowerStoreIdx = pitsPerPlayer
         self.upperStoreIdx = 2 * pitsPerPlayer + 1
+
+    def reset(self):
+        """
+        Reset the board to the initial state.
+        """
+
+        self.currentPlayer = self.startingPlayer
+        self.pits = ([self.seedsPerPit] * self.pitsPerPlayer + [0]) * 2
+        self.isOver = False
 
     def getPits(self, player: Player) -> list[int]:
         """

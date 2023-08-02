@@ -1,10 +1,19 @@
 import pygame
+from pygame_button import Button
+
 from ai import KalahAI
 from config import *
 from game import Kalah, Player
 
 GAP_SIZE = 10
 TEXT_PADDING = 30
+BUTTON_COLOR = (111, 1, 1)
+BUTTON_STYLE = {
+    "hover_color": (162, 2, 2),
+    "clicked_color": (212, 2, 2),
+    "clicked_font_color": (0, 0, 0),
+}
+
 PIT_IMAGE = pygame.image.load("assets/pit-60x60.png")
 HIGHLIGHTED_PIT_IMAGE = pygame.image.load("assets/highlighted-pit-60x60.png")
 STORE_IMAGE = pygame.image.load("assets/store-60x60.png")
@@ -18,7 +27,6 @@ class Tile(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
-
 
 class Board:
     def __init__(self, game: Kalah, ai1: KalahAI = None, ai2: KalahAI = None):
@@ -56,6 +64,16 @@ class Board:
         y = GAP_SIZE + tileHeight // 2 + GAP_SIZE // 2
         self.pitSprites.append(Tile(PIT_IMAGE, x, y, True))
         self.pitSpritesGroupe = pygame.sprite.Group(self.pitSprites)
+
+        # Add new game button 
+        y = GAP_SIZE + tileHeight + GAP_SIZE + tileHeight + GAP_SIZE
+        self.button = Button(
+            (GAP_SIZE, y, 100, 25), BUTTON_COLOR, 
+            self.reset, text='Reset', **BUTTON_STYLE
+        )
+
+    def reset(self):
+        self.game.reset()
 
     def draw(self):
         self.screen.fill((255, 255, 255))
@@ -99,6 +117,7 @@ class Board:
             for event in events:
                 if event.type == pygame.QUIT:
                     running = False
+                self.button.check_event(event)
 
             clickedIdx = -1
             # AI-1 turn
@@ -129,6 +148,7 @@ class Board:
                     print(e)
                                           
             self.draw()
+            self.button.update(self.screen)
             pygame.display.update()
 
         pygame.quit()
