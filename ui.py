@@ -1,4 +1,5 @@
 import pygame
+from ai import KalahAI
 
 from game import Kalah, Player
 
@@ -20,8 +21,10 @@ class Tile(pygame.sprite.Sprite):
 
 
 class Board:
-    def __init__(self, game: Kalah):
+    def __init__(self, game: Kalah, ai1: KalahAI = None, ai2: KalahAI = None):
         self.game = game
+        self.ai1 = ai1
+        self.ai2 = ai2
         tileWidth = PIT_IMAGE.get_rect().width
         tileHeight = PIT_IMAGE.get_rect().height
         self.width = GAP_SIZE + (tileWidth + GAP_SIZE) * (game.pitsPerPlayer + 1) + tileWidth + GAP_SIZE
@@ -97,15 +100,22 @@ class Board:
                 if event.type == pygame.QUIT:
                     running = False
 
-            # Check if user clicked on a pit
             clickedIdx = -1
-            for event in events:
-                if event.type == pygame.MOUSEBUTTONUP:
-                    for i in range(len(self.pitSprites)):
-                        pit = self.pitSprites[i]
-                        if not pit.isStore and pit.rect.collidepoint(event.pos):
-                            clickedIdx = i
-                            break
+            # AI-1 turn
+            if self.ai1 is not None and not self.game.isOver and self.game.currentPlayer == self.ai1.player:
+                clickedIdx = self.ai1.getMove(self.game)
+            # AI-2 turn
+            elif self.ai2 is not None and not self.game.isOver and self.game.currentPlayer == self.ai2.player:
+                clickedIdx = self.ai2.getMove(self.game)
+            # Check if user clicked on a pit
+            else:
+                for event in events:
+                    if event.type == pygame.MOUSEBUTTONUP:
+                        for i in range(len(self.pitSprites)):
+                            pit = self.pitSprites[i]
+                            if not pit.isStore and pit.rect.collidepoint(event.pos):
+                                clickedIdx = i
+                                break
 
             # Play and mark selected pit
             if clickedIdx != -1 and not self.game.isOver:
@@ -123,8 +133,11 @@ class Board:
         pygame.quit()
     
 SEEDS_PER_PIT = 4
-PITS_PER_PLAYER = 6
+PITS_PER_PLAYER = 16
+AI_MAX_DEPTH = 4
 
 kalah = Kalah(SEEDS_PER_PIT, PITS_PER_PLAYER, Player.UPPER)
-board = Board(kalah)  
+ai1 = KalahAI(AI_MAX_DEPTH, Player.UPPER)
+ai2 = KalahAI(AI_MAX_DEPTH, Player.LOWER)
+board = Board(kalah, ai1, ai2)  
 board.run()
