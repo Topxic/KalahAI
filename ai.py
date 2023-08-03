@@ -20,22 +20,25 @@ class KalahAI:
         upperScore = game.getScore(Player.UPPER)
         lowerScore = game.getScore(Player.LOWER)
 
+        score = 0
+
         # Check if game is finished
         if game.isOver:
             if self.player == Player.UPPER and upperScore > lowerScore:
-                return float('inf')
+                score = 1000 # return float('inf')
             elif self.player == Player.LOWER and lowerScore > upperScore:
-                return float('inf')
+                score = 1000 # return float('inf')
             elif upperScore == lowerScore:
-                return 0
+                score = 0
             else:
-                return float('-inf')
+                score = -1000 # return float('-inf')
 
         # Calculate score
         if self.player == Player.UPPER:
-            return upperScore - lowerScore
+            score += upperScore - lowerScore
         else:
-            return lowerScore - upperScore
+            score += lowerScore - upperScore
+        return score
 
     def getMove(self, game: Kalah) -> int:
         """
@@ -80,7 +83,8 @@ class KalahAI:
         # Make move
         gameCopy = game.copy()
         prevPlayer = gameCopy.currentPlayer
-        nextPlayer = gameCopy.playPit(move)
+        gameCopy.playPit(move)
+        nextPlayer = gameCopy.currentPlayer
         minOrMax = maximizingPlayer if prevPlayer == nextPlayer else not maximizingPlayer
         moveHistory += [move]
 

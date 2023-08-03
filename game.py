@@ -46,7 +46,7 @@ class Kalah:
         else:
             return self.pits[0:self.pitsPerPlayer]
 
-    def playPit(self, pit: int) -> bool:
+    def playPit(self, pit: int):
         """
         Pick the seeds of the given pit and distribute them counter-clockwise.
         Check for special cases:
@@ -54,7 +54,6 @@ class Kalah:
         - If the last seed falls into the player's store, the player gets another turn.
 
         :param pit: Index of the pit to pick.
-        :return: True if the player gets another turn, False otherwise.
         """
 
         # Check if game is over
