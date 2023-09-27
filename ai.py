@@ -9,11 +9,12 @@ class KalahAI:
         self.maxSearchDepth = maxSearchDepth
         self.player = player
     
-    def evaluate(self, game: Kalah) -> float:
+    def evaluate(self, game: Kalah, maximizingPlayer: Player) -> float:
         """
         Evaluates the current game state for the current player.
 
         :param game: The current game state.
+        :param maximizingPlayer: Player that is trying to maximize his move.
         :return: The score of the current game state.
         """
 
@@ -24,9 +25,9 @@ class KalahAI:
 
         # Check if game is finished
         if game.isOver:
-            if self.player == Player.UPPER and upperScore > lowerScore:
+            if maximizingPlayer == Player.UPPER and upperScore > lowerScore:
                 score = 1000 # return float('inf')
-            elif self.player == Player.LOWER and lowerScore > upperScore:
+            elif maximizingPlayer == Player.LOWER and lowerScore > upperScore:
                 score = 1000 # return float('inf')
             elif upperScore == lowerScore:
                 score = 0
@@ -34,7 +35,7 @@ class KalahAI:
                 score = -1000 # return float('-inf')
 
         # Calculate score
-        if self.player == Player.UPPER:
+        if maximizingPlayer == Player.UPPER:
             score += upperScore - lowerScore
         else:
             score += lowerScore - upperScore
@@ -42,7 +43,7 @@ class KalahAI:
 
     def getMove(self, game: Kalah) -> int:
         """
-        Searches for the best move for the current player
+        Searches for the best move for the current player.
         using the minimax algorithm with alpha-beta pruning.
 
         :param game: The current game state.
@@ -57,7 +58,7 @@ class KalahAI:
         bestScore = float('-inf')
         bestMove = moves[0]
         for move in moves:
-            score = self.minimax(game, move, self.maxSearchDepth - 1, float('-inf'), float('inf'), False, [])
+            score = self.minimax(game, move, self.maxSearchDepth - 1, float('-inf'), float('inf'), game.currentPlayer, [])
             if score > bestScore:
                 bestScore = score
                 bestMove = move
@@ -65,7 +66,7 @@ class KalahAI:
         print(f'AI for {self.player} chose pit {bestMove} with score {bestScore}')
         return bestMove
     
-    def minimax(self, game: Kalah, move: int, depth: int, alpha: float, beta: float, maximizingPlayer: bool, moveHistory: list[int]) -> float:
+    def minimax(self, game: Kalah, move: int, depth: int, alpha: float, beta: float, maximizingPlayer: Player, moveHistory: list[int]) -> float:
         """
         Searches for the best move for the current player in the
         game tree using the minimax algorithm with alpha-beta pruning.
@@ -75,30 +76,27 @@ class KalahAI:
         :param depth: The current depth of the search tree.
         :param alpha: The alpha value of the alpha-beta pruning.
         :param beta: The beta value of the alpha-beta pruning.
-        :param maximizingPlayer: True if the current player is the maximizing player, False otherwise.
+        :param maximizingPlayer: Player that is trying to maximize his move.
         :param moveHistory: The history of moves made to reach the current game state.
         :return: The score of the current game state.
         """
         
         # Make move
         gameCopy = game.copy()
-        prevPlayer = gameCopy.currentPlayer
         gameCopy.playPit(move)
-        nextPlayer = gameCopy.currentPlayer
-        minOrMax = maximizingPlayer if prevPlayer == nextPlayer else not maximizingPlayer
         moveHistory += [move]
 
         if gameCopy.isOver or depth == 0:
-            value = self.evaluate(gameCopy)
+            value = self.evaluate(gameCopy, maximizingPlayer)
             if DEBUG_SEARCH_TREE and self.maxSearchDepth - depth <= DEBUG_DEPTH:
                 print(f'Leave node | {"MAX" if not maximizingPlayer else "MIN"} | {value:4} | {moveHistory}')
             return value
 
         # Perform minimax
-        if maximizingPlayer:
+        if gameCopy.currentPlayer == maximizingPlayer:
             value = float('-inf')
             for move in gameCopy.getValidMoves():
-                value = max(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, minOrMax, moveHistory.copy()))
+                value = max(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, maximizingPlayer, moveHistory.copy()))
                 alpha = max(alpha, value)
                 if beta <= alpha:
                     break
@@ -109,7 +107,7 @@ class KalahAI:
         else:
             value = float('inf')
             for move in gameCopy.getValidMoves():
-                value = min(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, minOrMax, moveHistory.copy()))
+                value = min(value, self.minimax(gameCopy, move, depth - 1, alpha, beta, maximizingPlayer, moveHistory.copy()))
                 beta = min(beta, value)
                 if beta <= alpha:
                     break
